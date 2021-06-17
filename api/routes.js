@@ -1,10 +1,6 @@
 const route = require('express').Router();
-const db = require('../database/db');
+// const db = require('../database/db');
 
-
-route.get('/', function (req, res) {
-    res.render('index.ejs');
-});
 route.post('/', function (req, res) {
     console.log(req.body);
     res.send({ status: 'ok' });

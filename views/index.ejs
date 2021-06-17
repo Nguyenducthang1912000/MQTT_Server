@@ -1,124 +1,115 @@
-<!DOCTYPE html>
-<html lang="en">
-
+<!DOCTYPE HTML>
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Báo Cáo</title>
-    <script src="jquery.js"></script>
-    <script src="process.js"></script>
-    <script>
-        window.onload = function () {
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <link rel="stylesheet" href="./mycss.css">
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="process.js"></script>
+  <script src="socket.io/socket.io.js"></script>
+<script>
+window.onload = function () {
 
-            var dataPoints1 = [];
-            var dataPoints2 = [];
-            var options = {
-                title: {
-                    text: "Temperature and Humidity"
-                },
-                axisX: {
-                    title: "chart updates every half secs"
-                },
-                axisY: {
-                    suffix: ""
-                },
-                toolTip: {
-                    shared: true
-                },
-                legend: {
-                    cursor: "pointer",
-                    verticalAlign: "top",
-                    fontSize: 22,
-                    fontColor: "dimGrey",
-                    itemclick: toggleDataSeries
-                },
-                data: [{
-                    type: "line",
-                    xValueType: "dateTime",
-                    yValueFormatString: "##.00 °C",
-                    xValueFormatString: "hh:mm:ss TT",
-                    showInLegend: true,
-                    name: "Temperature",
-                    dataPoints: dataPoints1
-                },
-                {
-                    type: "line",
-                    xValueType: "dateTime",
-                    yValueFormatString: "##.00 g/m³",
-                    showInLegend: true,
-                    name: "Humidity",
-                    dataPoints: dataPoints2
-                }]
-            };
+var dataPoints1 = [];
+var dataPoints2 = [];
 
-            var chart = $("#chartContainer").CanvasJSChart(options);
+var chart = new CanvasJS.Chart("chartContainer", {
+	zoomEnabled: true,
+	title: {
+		text: "Humidity and Temperature"
+	},
+	axisX: {
+		title: "chart updates every 2 secs"
+	},
+	axisY:{
+		prefix: ""
+	}, 
+	toolTip: {
+		shared: true
+	},
+	legend: {
+		cursor:"pointer",
+		verticalAlign: "top",
+		fontSize: 22,
+		fontColor: "dimGrey",
+		itemclick : toggleDataSeries
+	},
+	data: [{ 
+		type: "line",
+		xValueType: "dateTime",
+		yValueFormatString: "##.00",
+		xValueFormatString: "hh:mm:ss TT",
+		showInLegend: true,
+		name: "Temperature",
+		dataPoints: dataPoints1
+		},
+		{				
+			type: "line",
+			xValueType: "dateTime",
+			yValueFormatString: "##.00",
+			showInLegend: true,
+			name: "Humidity" ,
+			dataPoints: dataPoints2
+	}]
+});
 
-            function toggleDataSeries(e) {
-                if (typeof (e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
-                    e.dataSeries.visible = false;
-                }
-                else {
-                    e.dataSeries.visible = true;
-                }
-                e.chart.render();
-            }
+function toggleDataSeries(e) {
+	if (typeof(e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
+		e.dataSeries.visible = false;
+	}
+	else {
+		e.dataSeries.visible = true;
+	}
+	chart.render();
+}
 
-            var updateInterval = 600;
-            // initial value
-            var yValue1 = 31;
-            var yValue2 = 32;
+var updateInterval = 2000;
+// initial value
+var yValue1 = 0; 
+var yValue2 = 0;
 
-            var time = new Date;
-            // starting at 10.00 am
-            time.setHours(14);
-            time.setMinutes(45);
-            time.setSeconds(00);
-            time.setMilliseconds(00);
+var time = new Date;
+// starting at 9.30 am
+time.setHours(9);
+time.setMinutes(30);
+time.setSeconds(00);
+time.setMilliseconds(00);
 
-            function updateChart(count) {
-                count = count || 1;
-                var deltaY1, deltaY2;
-                for (var i = 0; i < count; i++) {
-                    time.setTime(time.getTime() + 600);
-                    deltaY1 = -1 + Math.random() * (1 + 1);
-                    deltaY2 = -1 + Math.random() * (1 + 1);
+function updateChart(count) {
+	count = count || 1;
+	var deltaY1, deltaY2;
+	for (var i = 0; i < count; i++) {
+		time.setTime(time.getTime()+ updateInterval);
+	yValue1 = document.getElementById("hub");
+	yValue2 = document.getElementById("temp");
 
-                    // adding random value and rounding it to two digits. 
-                    yValue1 = Math.round((yValue1 + deltaY1) * 100) / 100;
-                    yValue2 = Math.round((yValue2 + deltaY2) * 100) / 100;
+	// pushing the new values
+	dataPoints1.push({
+		x: time.getTime(),
+		y: yValue1
+	});
+	dataPoints2.push({
+		x: time.getTime(),
+		y: yValue2
+	});
+	}
 
-                    // pushing the new values
-                    dataPoints1.push({
-                        x: time.getTime(),
-                        y: yValue1
-                    });
-                    dataPoints2.push({
-                        x: time.getTime(),
-                        y: yValue2
-                    });
-                }
+	// updating legend text with  updated with y Value 
+	chart.options.data[0].legendText = " Company A  $" + yValue1;
+	chart.options.data[1].legendText = " Company B  $" + yValue2; 
+	chart.render();
+}
+// generates first set of dataPoints 
+updateChart(100);	
+setInterval(function(){updateChart()}, updateInterval);
 
-                // updating legend text with  updated with y Value 
-                options.data[0].legendText = "Temperature : " + yValue1 + "°C";
-                options.data[1].legendText = "Humidity : " + yValue2 + " g/m³";
-                $("#chartContainer").CanvasJSChart().render();
-            }
-            // generates first set of dataPoints 
-            updateChart(100);
-            setInterval(function () { updateChart() }, updateInterval);
-
-        }
-    </script>
-    <link rel="stylesheet" type="text/css" href="mycss.css">
+}
+</script>
 
 </head>
-
 <body>
-    <h1 id="title" style="text-align:center">BÁO CÁO ĐỒ HỆ THỐNG NHÚNG KHÔNG DÂY LAB 6</h1>
-    <div id="chartContainer" style="height: 650px; width: 100%;"></div>
-    <script src="https://canvasjs.com/assets/script/jquery-1.11.1.min.js"></script>
-    <script src="https://canvasjs.com/assets/script/jquery.canvasjs.min.js"></script>
-    <h2 style="text-align: center;font: inherit">Made by Nguyễn Đức Thắng</h2>
+<div id="chartContainer" style="height: 370px; width: 100%;"></div>
+<script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
 </body>
-
 </html>
